@@ -1,6 +1,9 @@
+export type Periodicity = 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
+
 export interface  Instrument {
   id: string;
   description: string;
+  currency: string;
 }
 
 interface Pagination {
@@ -24,4 +27,17 @@ export interface InstrumentObject {
 export interface InstrumentsResponse {
   paging: Pagination;
   data: InstrumentObject[];
+}
+
+export interface ChartPoint {
+  t: string; // timestamp
+  o: number; // open
+  h: number; // high
+  l: number; // low
+  c: number; // close
+  v: number; // volume
+}
+
+export interface ChartDataResponse {
+  data: ChartPoint[];
 }

@@ -1,25 +1,33 @@
 <div class="container">
   <div class="row">
     <div class="col-4 d-flex flex-column align-items-center">
-      <label>Symbol</label>
+      <mat-label class="mb-2">Symbol:</mat-label>
       @if (symbol()) {
-        <div class="value">{{ symbol() }}</div>
+        <div class="value">
+          {{ symbol() }}
+        </div>
       } @else {
         <span>---</span>
       }
     </div>
+
     <div class="col-4 d-flex flex-column align-items-center">
-      <label>Price</label>
+      <mat-label class="mb-2">Price:</mat-label>
       @if (price()) {
-        <div class="value">{{ price() }}</div>
+        <div class="value">
+          {{ price() | currency: currency() : 'symbol' : '4.2-2' }}
+        </div>
       } @else {
         <span>---</span>
       }
     </div>
+
     <div class="col-4 d-flex flex-column align-items-center">
-      <label>Time</label>
+      <mat-label class="mb-2">Time:</mat-label>
       @if (time()) {
-        <div class="value">{{ time() | date:'MMM d, h:mm a' }}</div>
+        <div class="value">
+          {{ time() | date:'MMM d, h:mm a' }}
+        </div>
       } @else {
         <span>---</span>
       }

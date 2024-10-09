@@ -1,5 +1,5 @@
 import {Component, EventEmitter, input, OnInit, Output} from '@angular/core';
-import {MatOption, MatSelect} from '@angular/material/select';
+import {MatFormField, MatOption, MatSelect} from '@angular/material/select';
 import {Instrument} from '../../interfaces/data-interfaces';
 import {MatButton} from '@angular/material/button';
 
@@ -9,7 +9,8 @@ import {MatButton} from '@angular/material/button';
   imports: [
     MatSelect,
     MatOption,
-    MatButton
+    MatButton,
+    MatFormField
   ],
   templateUrl: './selection.component.html',
   styleUrl: './selection.component.scss'
@@ -23,11 +24,11 @@ export class SelectionComponent implements OnInit {
   selectedInstrument = new EventEmitter<Instrument | null>();
 
   ngOnInit(): void {
-    this.selected = this.instrumentsList()[0];
-    this.selectedInstrument.next(this.selected);
+    this.selected = this.instrumentsList().length ? this.instrumentsList()[0] : null;
+    this.onSelect();
   }
 
-  onBtnClick(): void {
+  onSelect(): void {
     this.selectedInstrument.next(this.selected);
   }
 }

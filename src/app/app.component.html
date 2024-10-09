@@ -1,4 +1,8 @@
-<mat-card appearance="outlined" class="container h-100 mt-5">
+<mat-card
+  appearance="outlined"
+  class="container mt-5"
+  [class.h-100]="error() || loading()"
+>
   @if (loading()) {
     <div class="d-flex align-items-center justify-content-center h-100">
       <mat-spinner diameter="40"></mat-spinner>
@@ -9,32 +13,34 @@
       <button mat-raised-button (click)="loadData()">Reload</button>
     </div>
   } @else {
-    <mat-card class="my-3 py-3">
+    <mat-card class="my-3 pt-3">
       <app-selection
         [instrumentsList]="instrumentsList()"
         (selectedInstrument)="onSelect($event)"
       ></app-selection>
     </mat-card>
 
+    <mat-card-header>
+      <mat-card-title>Market data:</mat-card-title>
+    </mat-card-header>
     <mat-card class="my-3 pb-3">
-      <mat-card-header>
-        <mat-card-title>Market data:</mat-card-title>
-      </mat-card-header>
       <div class="mt-3">
         <app-live-data
-          [symbol]="selectedInstrument()!.description"
+          [symbol]="selectedInstrument()?.description ?? ''"
+          [currency]="selectedInstrument()?.currency ?? ''"
           [price]="price()"
           [time]="time()"
         ></app-live-data>
       </div>
     </mat-card>
 
-    <mat-card class="my-3 pb-3 h-100">
-      <mat-card-header>
-        <mat-card-title>Charting data:</mat-card-title>
-      </mat-card-header>
+    <mat-card-header>
+      <mat-card-title>Charting data:</mat-card-title>
+    </mat-card-header>
+    <mat-card class="mt-3 mb-4 pb-3 h-100">
       <div class="mt-3">
         <app-historical-chart
+          [chartPointsList]="chartPointsList()"
         ></app-historical-chart>
       </div>
     </mat-card>

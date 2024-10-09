@@ -1,7 +1,13 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {AuthService} from './services/auth.service';
 import {DataService} from './services/data.service';
-import {Instrument, InstrumentObject, InstrumentsResponse} from './interfaces/data-interfaces';
+import {
+  ChartPoint,
+  ChartDataResponse,
+  Instrument,
+  InstrumentObject,
+  InstrumentsResponse
+} from './interfaces/data-interfaces';
 import {SelectionComponent} from './components/selection/selection.component';
 import {WebsocketService} from './services/websocket.service';
 import {WSData} from './interfaces/ws-interfaces';
@@ -30,13 +36,14 @@ import {takeUntil} from 'rxjs';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent extends ComponentDestroyedMixin implements OnInit {
+export class AppComponent extends ComponentDestroyedMixin implements OnInit, OnDestroy {
   instrumentsList = signal<Instrument[]>([]);
   selectedInstrument = signal<Instrument | null>(null);
+  chartPointsList = signal<ChartPoint[]>([]);
   loading = signal(false);
   error = signal(false);
-  price = signal<number | null>(null);
-  time = signal<string | null>(null);
+  price = signal<number>(0);
+  time = signal<string>('');
 
   private readonly authService = inject(AuthService);
   private readonly dataService = inject(DataService);
@@ -48,8 +55,8 @@ export class AppComponent extends ComponentDestroyedMixin implements OnInit {
     this.webSocketService.getMessages()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data: WSData | null) => {
-        this.price.set(data ? data.price : null);
-        this.time.set(data ? data.timestamp : null);
+        this.price.set(data?.price ?? 0);
+        this.time.set(data?.timestamp ?? '');
       });
   }
 
@@ -75,6 +82,17 @@ export class AppComponent extends ComponentDestroyedMixin implements OnInit {
 
     if (item) {
       this.webSocketService.switchInstrument(item.id);
+      void this.loadChartData(item.id);
+    }
+  }
+
+  private async loadChartData(instrumentId: string): Promise<void> {
+    const res: ChartDataResponse | null = await this.dataService.getChartData(instrumentId);
+
+    if (res && res.data) {
+      this.chartPointsList.set(res.data);
+    } else {
+      this.handleError();
     }
   }
 
@@ -85,6 +103,7 @@ export class AppComponent extends ComponentDestroyedMixin implements OnInit {
       const instruments: Instrument[] = res.data.map((instrumentObject: InstrumentObject) => ({
         id: instrumentObject.id,
         description: instrumentObject.description,
+        currency: instrumentObject.currency,
       }));
 
       this.instrumentsList.set(instruments);
@@ -98,6 +117,12 @@ export class AppComponent extends ComponentDestroyedMixin implements OnInit {
     this.error.set(true);
     this.loading.set(false);
     this.instrumentsList.set([]);
+    this.chartPointsList.set([]);
+    this.webSocketService.disconnect();
+  }
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
     this.webSocketService.disconnect();
   }
 }
