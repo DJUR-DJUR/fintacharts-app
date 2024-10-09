@@ -1,5 +1,3 @@
-export type Periodicity = 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
-
 export interface  Instrument {
   id: string;
   description: string;
@@ -40,4 +38,13 @@ export interface ChartPoint {
 
 export interface ChartDataResponse {
   data: ChartPoint[];
+}
+
+export enum PeriodicityEnum {
+  Minute = 'minute',
+  Hour = 'hour',
+  Day = 'day',
+  Week = 'week',
+  Month = 'month',
+  Year = 'year'
 }

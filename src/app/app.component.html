@@ -34,15 +34,31 @@
       </div>
     </mat-card>
 
-    <mat-card-header>
+    <mat-card-header class="d-flex justify-content-between">
       <mat-card-title>Charting data:</mat-card-title>
+      <button mat-button [matMenuTriggerFor]="periodicityMenu">
+        {{ periodicity() | titlecase }}
+      </button>
     </mat-card-header>
     <mat-card class="mt-3 mb-4 pb-3 h-100">
       <div class="mt-3">
         <app-historical-chart
           [chartPointsList]="chartPointsList()"
+          [periodicity]="periodicity()"
         ></app-historical-chart>
       </div>
     </mat-card>
   }
 </mat-card>
+
+<mat-menu
+  #periodicityMenu="matMenu"
+  xPosition="before"
+  yPosition="below"
+>
+  @for (value of periodicityValues; track value) {
+    <button mat-menu-item (click)="updatePeriodicity(value)">
+      {{ value | titlecase }}
+    </button>
+  }
+</mat-menu>

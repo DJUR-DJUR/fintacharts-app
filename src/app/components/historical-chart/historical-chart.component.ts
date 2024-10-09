@@ -1,5 +1,5 @@
-import {Component, input, OnChanges} from '@angular/core';
-import {ChartPoint} from '../../interfaces/data-interfaces';
+import {Component, effect, Input, input} from '@angular/core';
+import {ChartPoint, PeriodicityEnum} from '../../interfaces/data-interfaces';
 import {
   Chart,
   CategoryScale,
@@ -21,19 +21,27 @@ import {MatButton} from '@angular/material/button';
   templateUrl: './historical-chart.component.html',
   styleUrl: './historical-chart.component.scss'
 })
-export class HistoricalChartComponent implements OnChanges {
+export class HistoricalChartComponent {
   chartPointsList = input.required<ChartPoint[]>();
 
-  chart: Chart | null = null;
+  @Input()
+  periodicity = PeriodicityEnum.Minute;
 
-  ngOnChanges(): void {
-    this.createChart();
+  constructor() {
+    effect(() => this.createChart());
   }
+
+  chart: Chart | null = null;
 
   private createChart(): void {
     const labels: string[] = this.chartPointsList().map(point => {
       const date = new Date(point.t);
-      return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+
+      if (this.periodicity === PeriodicityEnum.Minute || this.periodicity === PeriodicityEnum.Hour) {
+        return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+      } else {
+        return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+      }
     });
 
     const openPrices: number[] = this.chartPointsList().map(point => point.o);
@@ -86,17 +94,9 @@ export class HistoricalChartComponent implements OnChanges {
         scales: {
           x: {
             type: 'category',
-            title: {
-              display: true,
-              text: 'Time',
-            },
           },
           y: {
             type: 'linear',
-            title: {
-              display: true,
-              text: 'Price',
-            },
           },
         },
       },

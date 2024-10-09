@@ -15,3 +15,13 @@ export interface WSData {
   timestamp: string;
   volume: number;
 }
+
+export interface WSSubscriptionMessage {
+  type: string;
+  id: string;
+  instrumentId: string;
+  provider: string;
+  subscribe: boolean | null;
+  kinds: string[];
+}
+

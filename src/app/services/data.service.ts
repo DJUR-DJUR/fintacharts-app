@@ -2,11 +2,11 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import {firstValueFrom} from 'rxjs';
 import {AuthService} from './auth.service';
-import {ChartDataResponse, InstrumentsResponse} from '../interfaces/data-interfaces';
+import {ChartDataResponse, InstrumentsResponse, PeriodicityEnum} from '../interfaces/data-interfaces';
 import {catchApiError} from '../utils/catch-api-error';
 import {
   COUNT_BACK_BARS_COUNT,
-  COUNT_BACK_INTERVAL, COUNT_BACK_PERIODICITY,
+  COUNT_BACK_INTERVAL,
   COUNT_BACK_PROVIDER,
   INSTRUMENTS_KIND,
   INSTRUMENTS_PROVIDER
@@ -40,7 +40,7 @@ export class DataService {
     );
   }
 
-  async getChartData(id: string): Promise<ChartDataResponse | null> {
+  async getChartData(id: string, periodicity = PeriodicityEnum.Day): Promise<ChartDataResponse | null> {
     const token = await this.authService.getAccessToken();
 
     const headers = new HttpHeaders({
@@ -51,7 +51,7 @@ export class DataService {
       .set('instrumentId', id)
       .set('provider', COUNT_BACK_PROVIDER)
       .set('interval', COUNT_BACK_INTERVAL)
-      .set('periodicity', COUNT_BACK_PERIODICITY)
+      .set('periodicity', periodicity)
       .set('barsCount', COUNT_BACK_BARS_COUNT);
 
     return await firstValueFrom(

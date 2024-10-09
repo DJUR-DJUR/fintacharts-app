@@ -25,7 +25,6 @@ export class SelectionComponent implements OnInit {
 
   ngOnInit(): void {
     this.selected = this.instrumentsList().length ? this.instrumentsList()[0] : null;
-    this.onSelect();
   }
 
   onSelect(): void {

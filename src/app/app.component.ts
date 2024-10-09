@@ -2,11 +2,12 @@ import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {AuthService} from './services/auth.service';
 import {DataService} from './services/data.service';
 import {
-  ChartPoint,
   ChartDataResponse,
+  ChartPoint,
   Instrument,
   InstrumentObject,
-  InstrumentsResponse
+  InstrumentsResponse,
+  PeriodicityEnum
 } from './interfaces/data-interfaces';
 import {SelectionComponent} from './components/selection/selection.component';
 import {WebsocketService} from './services/websocket.service';
@@ -15,9 +16,11 @@ import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {LiveDataComponent} from './components/live-data/live-data.component';
 import {MatCard, MatCardContent, MatCardHeader, MatCardTitle} from '@angular/material/card';
 import {HistoricalChartComponent} from './components/historical-chart/historical-chart.component';
-import {MatButton} from '@angular/material/button';
 import {ComponentDestroyedMixin} from './shared/component-destroed-mixin';
 import {takeUntil} from 'rxjs';
+import {TitleCasePipe} from '@angular/common';
+import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
+import {MatButton} from '@angular/material/button';
 
 @Component({
   selector: 'app-root',
@@ -31,7 +34,11 @@ import {takeUntil} from 'rxjs';
     MatCardContent,
     MatCardHeader,
     MatCardTitle,
-    MatButton
+    TitleCasePipe,
+    MatMenu,
+    MatMenuItem,
+    MatButton,
+    MatMenuTrigger,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -44,10 +51,15 @@ export class AppComponent extends ComponentDestroyedMixin implements OnInit, OnD
   error = signal(false);
   price = signal<number>(0);
   time = signal<string>('');
+  periodicity = signal<PeriodicityEnum>(PeriodicityEnum.Day);
 
   private readonly authService = inject(AuthService);
   private readonly dataService = inject(DataService);
   private readonly webSocketService = inject(WebsocketService);
+
+  get periodicityValues(): PeriodicityEnum[] {
+    return Object.values(PeriodicityEnum);
+  }
 
   ngOnInit(): void {
     void this.loadData();
@@ -86,11 +98,17 @@ export class AppComponent extends ComponentDestroyedMixin implements OnInit, OnD
     }
   }
 
-  private async loadChartData(instrumentId: string): Promise<void> {
-    const res: ChartDataResponse | null = await this.dataService.getChartData(instrumentId);
+  updatePeriodicity(value: PeriodicityEnum): void {
+    this.periodicity.set(value);
+    void this.loadChartData();
+  }
+
+  private async loadChartData(instrumentId = this.selectedInstrument()?.id ?? ''): Promise<void> {
+    const res: ChartDataResponse | null = await this.dataService.getChartData(instrumentId, this.periodicity());
 
     if (res && res.data) {
       this.chartPointsList.set(res.data);
+      this.loading.set(false);
     } else {
       this.handleError();
     }
@@ -107,7 +125,7 @@ export class AppComponent extends ComponentDestroyedMixin implements OnInit, OnD
       }));
 
       this.instrumentsList.set(instruments);
-      this.loading.set(false);
+      void this.onSelect(this.instrumentsList()[0]);
     } else {
       this.handleError();
     }

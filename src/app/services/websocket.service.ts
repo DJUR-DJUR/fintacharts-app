@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
-import {BehaviorSubject, Observable} from 'rxjs';
-import {WSData, WSResponse} from '../interfaces/ws-interfaces';
+import {BehaviorSubject, Observable, of, retry} from 'rxjs';
+import {WSData, WSResponse, WSSubscriptionMessage} from '../interfaces/ws-interfaces';
 import {environment} from '../../environments/environment';
+import {WS_MESSAGE_RETRY_COUNT, WS_MESSAGE_RETRY_DELAY, WS_SUBSCRIPTION_MESSAGE} from '../constants/ws-constants';
+import {catchError} from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -50,37 +52,49 @@ export class WebsocketService {
 
   switchInstrument(instrumentId: string): void {
     if (this.previousInstrumentId) {
-      const unsubscribeMessage = {
-        type: 'l1-subscription',
-        id: '1',
+      this.sendMessage({
+        ...WS_SUBSCRIPTION_MESSAGE,
         instrumentId: this.previousInstrumentId,
-        provider: 'simulation',
-        subscribe: false,
-        kinds: ['last'],
-      };
-
-      this.sendMessage(unsubscribeMessage);
+        subscribe: false
+      });
     }
 
-    const subscribeMessage = {
-      type: 'l1-subscription',
-      id: '1',
+    this.sendMessage({
+      ...WS_SUBSCRIPTION_MESSAGE,
       instrumentId: instrumentId,
-      provider: 'simulation',
-      subscribe: true,
-      kinds: ['last'],
-    };
-
-    this.sendMessage(subscribeMessage);
+      subscribe: true
+    });
 
     this.previousInstrumentId = instrumentId;
   }
 
-  private sendMessage(message: object): void {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(message));
-    } else {
-      console.error('WebSocket not connected');
-    }
+  private sendMessage(message: WSSubscriptionMessage): void {
+    this.trySendMessage(message)
+      .subscribe({
+        next: () => console.log('Message sent successfully:', message),
+        error: (err) => console.error('Failed to send message:', err),
+      });
+  }
+
+  private trySendMessage(message: WSSubscriptionMessage): Observable<void> {
+    return new Observable<void>((observer) => {
+      const send = () => {
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+          this.socket.send(JSON.stringify(message));
+          observer.complete();
+        } else {
+          observer.error('WebSocket not connected');
+        }
+      };
+
+      send();
+
+    }).pipe(
+      retry({count: WS_MESSAGE_RETRY_COUNT, delay: WS_MESSAGE_RETRY_DELAY}),
+      catchError(err => {
+        console.error('Failed to send message after retries:', err);
+        return of(err);
+      })
+    );
   }
 }
