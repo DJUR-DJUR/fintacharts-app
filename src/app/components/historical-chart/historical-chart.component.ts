@@ -25,7 +25,7 @@ export class HistoricalChartComponent {
   chartPointsList = input.required<ChartPoint[]>();
 
   @Input()
-  periodicity = PeriodicityEnum.Minute;
+  periodicity = PeriodicityEnum.Day;
 
   constructor() {
     effect(() => this.createChart());

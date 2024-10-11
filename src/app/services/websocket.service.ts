@@ -72,7 +72,7 @@ export class WebsocketService {
     this.trySendMessage(message)
       .subscribe({
         next: () => console.log('Message sent successfully:', message),
-        error: (err) => console.error('Failed to send message:', err),
+        error: err => console.error('Failed to send message:', err),
       });
   }
 

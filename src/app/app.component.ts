@@ -47,8 +47,8 @@ export class AppComponent extends ComponentDestroyedMixin implements OnInit, OnD
   instrumentsList = signal<Instrument[]>([]);
   selectedInstrument = signal<Instrument | null>(null);
   chartPointsList = signal<ChartPoint[]>([]);
-  loading = signal(false);
-  error = signal(false);
+  loading = signal<boolean>(false);
+  error = signal<boolean>(false);
   price = signal<number>(0);
   time = signal<string>('');
   periodicity = signal<PeriodicityEnum>(PeriodicityEnum.Day);
@@ -94,7 +94,7 @@ export class AppComponent extends ComponentDestroyedMixin implements OnInit, OnD
 
     if (item) {
       this.webSocketService.switchInstrument(item.id);
-      void this.loadChartData(item.id);
+      void this.loadChartData();
     }
   }
 
@@ -103,8 +103,12 @@ export class AppComponent extends ComponentDestroyedMixin implements OnInit, OnD
     void this.loadChartData();
   }
 
-  private async loadChartData(instrumentId = this.selectedInstrument()?.id ?? ''): Promise<void> {
-    const res: ChartDataResponse | null = await this.dataService.getChartData(instrumentId, this.periodicity());
+  private async loadChartData(): Promise<void> {
+    const res: ChartDataResponse | null =
+      await this.dataService.getChartData(
+        this.selectedInstrument()?.id ?? '',
+        this.periodicity()
+      );
 
     if (res && res.data) {
       this.chartPointsList.set(res.data);
@@ -118,10 +122,10 @@ export class AppComponent extends ComponentDestroyedMixin implements OnInit, OnD
     const res: InstrumentsResponse | null = await this.dataService.getInstruments();
 
     if (res && res.data) {
-      const instruments: Instrument[] = res.data.map((instrumentObject: InstrumentObject) => ({
-        id: instrumentObject.id,
-        description: instrumentObject.description,
-        currency: instrumentObject.currency,
+      const instruments: Instrument[] = res.data.map((instrument: InstrumentObject) => ({
+        id: instrument.id,
+        description: instrument.description,
+        currency: instrument.currency,
       }));
 
       this.instrumentsList.set(instruments);
